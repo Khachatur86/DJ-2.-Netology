@@ -30,6 +30,7 @@ def landing(request):
     landing_alt_html = 'landing_alternate.html'
 
     render_page = landing_org_html if request.GET.get('ab-test-arg') == 'original' else landing_alt_html
+    print(render_page)
     if render_page == landing_org_html:
         counter_show['original'] += 1
     else:
@@ -55,15 +56,4 @@ def stats(request):
     return render_to_response('stats.html', context={
         'test_conversion': test_counter,
         'original_conversion': orig_counter,
-    })
-
-
-def stats(request):
-    # Реализуйте логику подсчета отношения количества переходов к количеству показов страницы
-    # Чтобы отличить с какой версии лендинга был переход
-    # проверяйте GET параметр marker который может принимать значения test и original
-    # Для вывода результат передайте в следующем формате:
-    return render_to_response('stats.html', context={
-        'test_conversion': 0.5,
-        'original_conversion': 0.4,
     })
