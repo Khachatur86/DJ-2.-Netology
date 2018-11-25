@@ -16,7 +16,7 @@ class FileList(TemplateView):
     def get_context_data(self, **kwargs):
         # Реализуйте алгоритм подготавливающий контекстные данные для шаблона по примеру:
         context = super().get_context_data(**kwargs)
-        date = None or
+        date = None or # здесь нужна Ваша помощь. Я хочу считать date с адресной строки
 
         server_files = []
         sort_by_date = True if date is not None else None
@@ -34,15 +34,12 @@ class FileList(TemplateView):
                     == dt.datetime.strptime(date[:DATA_LENGTH], "%Y-%m-%d").date():
                 server_files.append(file_info)
 
-        context = {
+        context.update {
             'files': server_files,
             'date': date if date is not None else ''  # Этот параметр необязательный
         }
 
-        return render_to_response(
-            template_name=self.template_name,
-            context=context
-        )
+        return context
 
 
 def file_content(request, name):
