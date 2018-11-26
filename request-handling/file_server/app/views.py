@@ -1,4 +1,4 @@
-import datetime as dt
+from datetime import datetime as dt
 import os
 from .settings import FILES_PATH
 from django.shortcuts import render_to_response
@@ -13,32 +13,40 @@ text_missing_file = 'File not found'
 class FileList(TemplateView):
     template_name = 'index.html'
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, date=None, **kwargs):
         # Реализуйте алгоритм подготавливающий контекстные данные для шаблона по примеру:
         context = super().get_context_data(**kwargs)
-        date = None or # здесь нужна Ваша помощь. Я хочу считать date с адресной строки
-
+        date = date
+        # date = date if date is not None else ""
         server_files = []
-        sort_by_date = True if date is not None else None
         for file in os.listdir(FILES_PATH):
             file_stats = os.stat(os.path.join(FILES_PATH, file))
             file_info = {
                 'name': file,
-                'ctime': dt.datetime.fromtimestamp(file_stats[C_TIME]),
-                'mtime': dt.datetime.fromtimestamp(file_stats[M_TIME]),
-                'file_content': 'content'
+                'ctime': dt.fromtimestamp(file_stats.st_ctime),
+                'mtime': dt.fromtimestamp(file_stats.st_mtime),
             }
 
-            if sort_by_date is None \
-                    or dt.datetime.fromtimestamp((file_stats.st_ctime)).date() \
-                    == dt.datetime.strptime(date[:DATA_LENGTH], "%Y-%m-%d").date():
+            print(date)
+            print(dt.fromtimestamp(file_stats.st_mtime).strftime("%Y-%m-%d"))
+
+            if date == dt.fromtimestamp(file_stats.st_ctime).strftime("%Y-%m-%d") \
+             or date == dt.fromtimestamp(file_stats.st_mtime).strftime("%Y-%m-%d"):
                 server_files.append(file_info)
-
-        context.update {
+                # print("+++++++++IF TRUE________")
+                # print(date)
+                # print(dt.fromtimestamp(file_stats.st_mtime).strftime("%Y-%m-%d"))
+            # elif date:
+            #     server_files.append(file_info)
+                # print("++++ELIF++++")
+                # print(date)
+            # else:
+            #     server_files.append(file_info)
+            #     print("++++ELSE++++")
+        context.update({
             'files': server_files,
-            'date': date if date is not None else ''  # Этот параметр необязательный
-        }
-
+            'date': date  # Этот параметр необязательный
+        })
         return context
 
 
