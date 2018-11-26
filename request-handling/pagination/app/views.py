@@ -1,11 +1,9 @@
-from csv import DictReader
-from .settings import BUS_STATION_CSV, STATIONS_ON_PAGE
-from urllib.parse import urlencode, quote_plus
-
-from django.shortcuts import render_to_response, redirect
+from .settings import BUS_STATION_CSV
+import csv
+from django.shortcuts import render_to_response, redirect, render
 from django.urls import reverse
+from django.core.paginator import Paginator
 
-import datetime
 
 
 def index(request):
@@ -13,27 +11,33 @@ def index(request):
 
 
 def bus_stations(request):
-    get_param_page = request.GET.get('page')
+    all_stations = []
+    page_number = request.GET.get('page', 1)
 
-    current_page_pagination = 1 if get_param_page is None else int(get_param_page)
+    with open(BUS_STATION_CSV, encoding='cp1251') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for info in reader:
+            bus_stations = {'Name' : info['Name'],
+                            'Street': info['Street'],
+                            'District': info['District']}
+            all_stations.append(bus_stations)
 
-    stations = []
-    with open(BUS_STATION_CSV, encoding='cp1251') as csv_file:
-        reader = DictReader(csv_file)
-        cur_csv_page = current_page_pagination * STATIONS_ON_PAGE
+    paginator = Paginator(all_stations, 10)
+    page = paginator.get_page(page_number)
+    print('1', paginator.page_range, '1')
+    print('2', paginator.get_page(2).object_list,'2')
 
-        for counter, row in enumerate(reader):
-            if cur_csv_page - counter < STATIONS_ON_PAGE:
-                stations.append({'Name': row['Name'], 'Street': row['Street'], 'District': row['District']})
-            if counter > cur_csv_page:
-                break
+    if page.has_previous():
+        prev_url = '?page={}'.format(page.previous_page_number())
+    else:
+        prev_url = ''
+    if page.has_next():
+        next_url = '?page={}'.format(page.next_page_number())
+    else:
+        next_url = ''
 
-    prev_url = f"{reverse('bus_stations')}?page={current_page_pagination-1}"
-    next_url = f"{reverse('bus_stations')}?page={current_page_pagination+1}"
-
-    return render_to_response('index.html', context={
-        'bus_stations': stations,
-        'current_page': current_page_pagination,
-        'prev_page_url': prev_url if current_page_pagination != 1 else None,
-        'next_page_url': next_url,
-    })
+    print(BUS_STATION_CSV)
+    return render(request, 'index.html', context = {'bus_stations': page.object_list,
+                                                    'current_page': page_number,
+                                                    'prev_page_url': prev_url,
+                                                    'next_page_url': next_url,})
